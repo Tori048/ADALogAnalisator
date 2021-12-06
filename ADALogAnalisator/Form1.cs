@@ -16,18 +16,44 @@ namespace ADALogAnalisator
         public Form1()
         {
             InitializeComponent();
+            InitializeLogViewer();
             //openFileDialog1.Filter = "Text files(*.txt)|*.txt|All files(*.*)|*.*";
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() == DialogResult.Cancel)
-                return;
+                return; 
             // получаем выбранный файл
-            string filename = openFileDialog1.FileName;
+            string[] filenames = openFileDialog1.FileNames;
             // читаем файл в строку
-            string fileText = File.ReadAllText(filename);
-            MessageBox.Show("Файл открыт");
+
+            oLogViewer.setPathToFiles(filenames);
+            MessageBox.Show("Файл/ы открыт/ы");
+            tFileNames.Clear();
+            foreach(string fileName in filenames)
+            {
+                tFileNames.Text += (fileName + "\r\n");
+            }
+        }
+
+        private void setDN_TextChanged(object sender, EventArgs e)
+        {
+            oLogViewer.setDN(textBoxDN.Text);
+        }
+
+        private void setTN_TextChanged(object sender, EventArgs e)
+        {
+            oLogViewer.setDN(textBoxTN.Text);
+        }
+
+        private void Analiz_Click(object sender, EventArgs e)
+        {
+            /* TODO:
+             * Проверь указал ли пользователь искомые DN и TN.
+             * Если нет - попросить указать отдельным MessageBox.
+             */
+            oLogViewer.AnalizeFiles();
         }
     }
 }
