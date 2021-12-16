@@ -49,10 +49,12 @@ namespace ADALogAnalisator
 
         private void Analiz_Click(object sender, EventArgs e)
         {
-            /* TODO:
-             * Проверь указал ли пользователь искомые DN и TN.
-             * Если нет - попросить указать отдельным MessageBox.
-             */
+            if (String.IsNullOrEmpty(oLogViewer.getDN()) && String.IsNullOrEmpty(oLogViewer.getTN()))
+            {
+                MessageBox.Show("Введите DN и TN");
+                return;
+            }
+            MessageBox.Show("DN = " + oLogViewer.getDN() + " TN = " + oLogViewer.getTN());
             oLogViewer.AnalizeFiles();
         }
     }
