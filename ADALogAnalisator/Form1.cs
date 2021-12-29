@@ -44,7 +44,7 @@ namespace ADALogAnalisator
 
         private void setTN_TextChanged(object sender, EventArgs e)
         {
-            oLogViewer.setDN(textBoxTN.Text);
+            oLogViewer.setTN(textBoxTN.Text);
         }
 
         private void Analiz_Click(object sender, EventArgs e)
