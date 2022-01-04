@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Threading;
+using System.Diagnostics;
 
 namespace ADALogAnalisator
 {
@@ -24,6 +25,7 @@ namespace ADALogAnalisator
             string sFileName = (string)FileName;
             using (StreamReader sr = new StreamReader(sFileName, System.Text.Encoding.Default))
             {
+                Trace.WriteLine(FileName + " threadID = " + Thread.CurrentThread.ManagedThreadId);
                 string line;
                 while ((line = sr.ReadLine()) != null)
                 {
@@ -32,9 +34,19 @@ namespace ADALogAnalisator
                     1. Если находится нужный DN/TN - запоминается время и название сервера.
                     2. Если телефон разрегистрировался - запоминается причина разрегистрации.
                     */
+                    if ( line.Contains(getDN()) || line.Contains(getTN()))
+                    {
+                        writeTextToFile(line);
+                    }
 
                 }
             }
+        }
+
+        private void writeTextToFile(string Text)
+        {
+            string FileName = Path.Combine(Environment.CurrentDirectory, "fingingDetails.txt");
+
         }
 
         public void setPathToFiles(string[] text)
@@ -75,6 +87,7 @@ namespace ADALogAnalisator
             // Open the stream and read it back.
             foreach (string FileName in FileForAnaliz)
             {
+                Trace.WriteLine(FileName);
                 Thread myThread = new Thread(new ParameterizedThreadStart(ReadFile));
                 myThread.Start(FileName);
             }
