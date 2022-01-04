@@ -57,5 +57,13 @@ namespace ADALogAnalisator
             MessageBox.Show("DN = " + oLogViewer.getDN() + " TN = " + oLogViewer.getTN());
             oLogViewer.AnalizeFiles();
         }
+
+        private void checkBoxSelectUnregReason(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked)
+                oLogViewer.SelectUnregReason = true;
+            else
+                oLogViewer.SelectUnregReason = false;
+        }
     }
 }

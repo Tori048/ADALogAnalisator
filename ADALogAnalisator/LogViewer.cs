@@ -12,48 +12,6 @@ namespace ADALogAnalisator
 
     class LogViewer
     {
-        struct SetIdentificators
-        {
-            public string sDN;
-            public string sTN;
-        }
-        private SetIdentificators DN_TN;
-        private string[] FileForAnaliz;
-        private void FindDNTN(string str)
-        {
-            System.Diagnostics.Trace.WriteLine(str);
-        }
-        private void ReadFile(object FileName)
-        {
-            //Console.WriteLine("kek");
-            string sFileName = (string)FileName;
-            using (StreamReader sr = new StreamReader(sFileName, System.Text.Encoding.Default))
-            {
-                Trace.WriteLine(FileName + " threadID = " + Thread.CurrentThread.ManagedThreadId);
-                string line;
-                while ((line = sr.ReadLine()) != null)
-                {
-                    /*TODO: тут надо почитать файл построчно и поискать выбранные DN и TN.
-                    0. подумать над тем, как разделить чтение файла на несколько потоков. Или же для каждого файла выделить отдельный поток. 
-                    1. Если находится нужный DN/TN - запоминается время и название сервера.
-                    2. Если телефон разрегистрировался - запоминается причина разрегистрации.
-                    */
-                    if (line.Contains(getDN()) || line.Contains(getTN()))
-                    {
-                        FindDNTN(line);
-                        writeTextToFile(line);
-                    }
-
-                }
-                sr.Close();
-            }
-        }
-
-        private void writeTextToFile(string Text)
-        {
-            string FileName = Path.Combine(Environment.CurrentDirectory, "fingingDetails.txt");
-
-        }
 
         public void setPathToFiles(string[] text)
         {
@@ -80,9 +38,70 @@ namespace ADALogAnalisator
         {
             DN_TN.sTN = TN;
         }
+        static object locker = new object();
+
+        public bool SelectUnregReason
+        {
+            set { selectUnregReason = value; }
+            get { return selectUnregReason; }
+        }
+           
+
+        struct SetIdentificators
+        {
+            public string sDN;
+            public string sTN;
+        }
+
+        private SetIdentificators DN_TN;
+        private bool selectUnregReason;
+        private string[] FileForAnaliz;
+
+        //Только для того, чтобы в консоль выводилось то, что было найдено
+        private void FindDNTN(string str)
+        {
+            System.Diagnostics.Trace.WriteLine(str);
+        }
+
+        private void ReadFile(object FileName)
+        {
+            //Console.WriteLine("kek");
+            string sFileName = (string)FileName;
+            using (StreamReader sr = new StreamReader(sFileName, System.Text.Encoding.Default))
+            {
+                Trace.WriteLine(FileName + " threadID = " + Thread.CurrentThread.ManagedThreadId);
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    /*TODO: тут надо почитать файл построчно и поискать выбранные DN и TN.
+                    0. подумать над тем, как разделить чтение файла на несколько потоков. Или же для каждого файла выделить отдельный поток. 
+                    1. Если находится нужный DN/TN - запоминается время и название сервера.
+                    2. Если телефон разрегистрировался - запоминается причина разрегистрации.
+                    */
+                    if (line.Contains(getDN()) || line.Contains(getTN()))
+                    {
+                        FindDNTN(line);
+                        writeTextToFile(line);
+                    }
+                }
+            }
+        }
+
+        private void writeTextToFile(string Text)
+        {
+            string FileName = Path.Combine(Environment.CurrentDirectory, "fingingDetails.txt");
+            lock(locker)
+            {
+                using (StreamWriter sw = new StreamWriter(FileName, true, System.Text.Encoding.Default))
+                {
+                    sw.WriteLine(Text);
+                }
+            }
+        }
 
         public void AnalizeFiles()
         {
+            Trace.WriteLine( "ProcCount = " + Environment.ProcessorCount);
             /*
              * Проверь корректно ли будут работать потоки. Сделай пул потоков
              * Возможно, надо засунуть имена файлов в какой-то список, где можно будет маркать прочитанные или открытые. Или просто добавить проверку
