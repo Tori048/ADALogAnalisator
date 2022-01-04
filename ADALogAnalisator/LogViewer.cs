@@ -19,6 +19,10 @@ namespace ADALogAnalisator
         }
         private SetIdentificators DN_TN;
         private string[] FileForAnaliz;
+        private void FindDNTN(string str)
+        {
+            System.Diagnostics.Trace.WriteLine(str);
+        }
         private void ReadFile(object FileName)
         {
             //Console.WriteLine("kek");
@@ -34,12 +38,14 @@ namespace ADALogAnalisator
                     1. Если находится нужный DN/TN - запоминается время и название сервера.
                     2. Если телефон разрегистрировался - запоминается причина разрегистрации.
                     */
-                    if ( line.Contains(getDN()) || line.Contains(getTN()))
+                    if (line.Contains(getDN()) || line.Contains(getTN()))
                     {
+                        FindDNTN(line);
                         writeTextToFile(line);
                     }
 
                 }
+                sr.Close();
             }
         }
 
