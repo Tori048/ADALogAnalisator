@@ -56,6 +56,8 @@ namespace ADALogAnalisator
         private SetIdentificators DN_TN;
         private bool selectUnregReason;
         private string[] FileForAnaliz;
+        // 1st string - TN, 2nd string - DN 
+        private Dictionary<string, string> dEndpoints = new Dictionary<string, string>();
 
         //Только для того, чтобы в консоль выводилось то, что было найдено
         private void FindDNTN(string str)
@@ -74,12 +76,21 @@ namespace ADALogAnalisator
                 while ((line = sr.ReadLine()) != null)
                 {
                     /*TODO: тут надо почитать файл построчно и поискать выбранные DN и TN.
-                    0. подумать над тем, как разделить чтение файла на несколько потоков. Или же для каждого файла выделить отдельный поток. 
                     1. Если находится нужный DN/TN - запоминается время и название сервера.
                     2. Если телефон разрегистрировался - запоминается причина разрегистрации.
                     */
+                    if (SelectUnregReason)
+                    {/*
+                        если line содержит что-то, что будет указывать на TN или DN, то тогда надо закинуть их в словарь с endpints.
+                        */
+                        if (line.Contains(""))
+                        {
+
+                        }
+                    }
                     if (line.Contains(getDN()) || line.Contains(getTN()))
                     {
+                        
                         FindDNTN(line);
                         writeTextToFile(line);
                     }
