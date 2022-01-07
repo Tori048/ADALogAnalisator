@@ -39,6 +39,7 @@ namespace ADALogAnalisator
             DN_TN.sTN = TN;
         }
         static object locker = new object();
+        static object DictionarLock = new object();
 
         public bool SelectUnregReason
         {
@@ -46,7 +47,6 @@ namespace ADALogAnalisator
             get { return selectUnregReason; }
         }
            
-
         struct SetIdentificators
         {
             public string sDN;
@@ -56,13 +56,44 @@ namespace ADALogAnalisator
         private SetIdentificators DN_TN;
         private bool selectUnregReason;
         private string[] FileForAnaliz;
-        // 1st string - TN, 2nd string - DN 
+
+        /* Список всех endpoint, что были найдены.
+         * 1st string - TN, 2nd string - DN 
+         */
         private Dictionary<string, string> dEndpoints = new Dictionary<string, string>();
 
         //Только для того, чтобы в консоль выводилось то, что было найдено
         private void FindDNTN(string str)
         {
             System.Diagnostics.Trace.WriteLine(str);
+        }
+
+
+        /* Добавляет endpoint и данные с ним связанные во все словари, что есть.
+         * 
+         */
+        private void addEndpointToDictionaries(string TN, string DN = "", string TimeReg = "", string TimeUnreg = "")
+        {
+            //KeyValuePair<string, string> TnDn = new KeyValuePair<string, string>(TN, DN);
+            //Добавим endpoint в словарь всех endpoint, хотя бы TN.
+            if (!dEndpoints.ContainsKey(TN))
+            {
+                dEndpoints.Add(TN, DN);
+            }
+            //Додобавим туда же DN, если вдруг его нет для TN.
+            else if (dEndpoints.ContainsKey(TN) && dEndpoints[TN] != "" && DN != "")
+            {
+                dEndpoints[TN] = DN;
+            }
+        }
+
+        private void FindUnregReason(string sLine)
+        {
+            if (sLine.Contains("CEndpointManager::OnEndpointUnregistered"))
+            {
+                string TN = sLine.Substring(sLine.IndexOf("TN ")+3, (sLine.LastIndexOf(",") - sLine.IndexOf("TN "))-3);
+                addEndpointToDictionaries(TN);
+            }
         }
 
         private void ReadFile(object FileName)
@@ -83,9 +114,9 @@ namespace ADALogAnalisator
                     {/*
                         если line содержит что-то, что будет указывать на TN или DN, то тогда надо закинуть их в словарь с endpints.
                         */
-                        if (line.Contains(""))
+                        lock (DictionarLock)
                         {
-
+                            FindUnregReason(line);
                         }
                     }
                     if (line.Contains(getDN()) || line.Contains(getTN()))
