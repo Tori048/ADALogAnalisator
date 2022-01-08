@@ -61,18 +61,20 @@ namespace ADALogAnalisator
          * 1st string - TN, 2nd string - DN 
          */
         private Dictionary<string, string> dEndpoints = new Dictionary<string, string>();
+        /* Список со временем разрега и рега каждого endpoint
+         * 1st string - TN, 2nd string - <время разрегистрации;причина>, 3nd - время регистрации
+         */ 
+        private Dictionary<string, List<KeyValuePair<string, string>>> dUnregReg = new Dictionary<string, List<KeyValuePair<string, string>>>();
 
         //Только для того, чтобы в консоль выводилось то, что было найдено
         private void FindDNTN(string str)
         {
-            System.Diagnostics.Trace.WriteLine(str);
+            System.Diagnostics.Trace.WriteLine(Thread.CurrentThread.Name + ":" + str + " threadID = " + Thread.CurrentThread.ManagedThreadId);
         }
 
-
-        /* Добавляет endpoint и данные с ним связанные во все словари, что есть.
-         * 
+        /* Добавляет endpoint и данные с ним связанные во все словари, что есть. 
          */
-        private void addEndpointToDictionaries(string TN, string DN = "", string TimeReg = "", string TimeUnreg = "")
+        private void addEndpointToDictionaries(string TN, string DN = "", string TimeReg = "", string TimeUnreg = "", string Reason = "")
         {
             //KeyValuePair<string, string> TnDn = new KeyValuePair<string, string>(TN, DN);
             //Добавим endpoint в словарь всех endpoint, хотя бы TN.
@@ -85,6 +87,32 @@ namespace ADALogAnalisator
             {
                 dEndpoints[TN] = DN;
             }
+            /* Добавим в словарь со статистикой информацию о endpoint
+            */
+            if (!dUnregReg.ContainsKey(TN))
+            {
+                if (TimeUnreg != "" && Reason != "")
+                {
+                    KeyValuePair<string, string> test = new KeyValuePair<string, string>(TimeUnreg + ";" + Reason, "");
+                    List<KeyValuePair<string, string>> lUnregAndReason = new List<KeyValuePair<string, string>>() { test};
+                    //lUnregAndReason.Add(lUnregAndReason);
+                    dUnregReg.Add(TN, lUnregAndReason);
+                }
+                else if (TimeReg != "")
+                {
+                    KeyValuePair<string, string> test = new KeyValuePair<string, string>("", TimeReg);
+                    List<KeyValuePair<string, string>> lReg = new List<KeyValuePair<string, string>>() { test };
+                    //lUnregAndReason.Add(lUnregAndReason);
+                    dUnregReg.Add(TN, lReg);
+                }
+            }
+            else if(dUnregReg.ContainsKey(TN))
+            {
+                /*TODO:
+                 * сделать логику добавления информации о endpoint, если TN уже есть, т.е. продолжить заполнение статистических данных.
+                 */
+            }
+            
         }
 
         private void FindUnregReason(string sLine)
@@ -92,7 +120,9 @@ namespace ADALogAnalisator
             if (sLine.Contains("CEndpointManager::OnEndpointUnregistered"))
             {
                 string TN = sLine.Substring(sLine.IndexOf("TN ")+3, (sLine.LastIndexOf(",") - sLine.IndexOf("TN "))-3);
-                addEndpointToDictionaries(TN);
+                string UnregTime = sLine.Substring(sLine.IndexOf(":") - 2, 8);
+                string Reason = sLine.Substring(sLine.IndexOf("=") + 2, (sLine.LastIndexOf("(") - sLine.IndexOf("="))-3);
+                addEndpointToDictionaries(TN,"","",UnregTime,Reason);
             }
         }
 
@@ -101,8 +131,7 @@ namespace ADALogAnalisator
             //Console.WriteLine("kek");
             string sFileName = (string)FileName;
             using (StreamReader sr = new StreamReader(sFileName, System.Text.Encoding.Default))
-            {
-                Trace.WriteLine(FileName + " threadID = " + Thread.CurrentThread.ManagedThreadId);
+            { 
                 string line;
                 while ((line = sr.ReadLine()) != null)
                 {
@@ -122,7 +151,7 @@ namespace ADALogAnalisator
                     if (line.Contains(getDN()) || line.Contains(getTN()))
                     {
                         
-                        FindDNTN(line);
+                       // FindDNTN(line);
                         writeTextToFile(line);
                     }
                 }

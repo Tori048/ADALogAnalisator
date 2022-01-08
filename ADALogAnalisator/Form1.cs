@@ -47,6 +47,14 @@ namespace ADALogAnalisator
             oLogViewer.setTN(textBoxTN.Text);
         }
 
+        private void checkBoxSelectUnregReason(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked)
+                oLogViewer.SelectUnregReason = true;
+            else
+                oLogViewer.SelectUnregReason = false;
+        }
+
         private void Analiz_Click(object sender, EventArgs e)
         {
             if (String.IsNullOrEmpty(oLogViewer.getDN()) && String.IsNullOrEmpty(oLogViewer.getTN()))
@@ -58,12 +66,5 @@ namespace ADALogAnalisator
             oLogViewer.AnalizeFiles();
         }
 
-        private void checkBoxSelectUnregReason(object sender, EventArgs e)
-        {
-            if (checkBox1.Checked)
-                oLogViewer.SelectUnregReason = true;
-            else
-                oLogViewer.SelectUnregReason = false;
-        }
     }
 }
