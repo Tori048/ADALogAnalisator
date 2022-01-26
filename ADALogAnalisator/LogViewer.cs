@@ -60,7 +60,7 @@ namespace ADALogAnalisator
         /* Список всех endpoint, что были найдены.
          * 1st string - TN, 2nd string - DN 
          */
-        private Dictionary<string, string> dEndpoints = new Dictionary<string, string>();
+        private Dictionary<string, string> dAllEndpoints = new Dictionary<string, string>();
         /* Список со временем разрега и рега каждого endpoint
          * 1st string - TN, 2nd string - <время разрегистрации;причина>, 3nd - время регистрации
          */ 
@@ -78,14 +78,14 @@ namespace ADALogAnalisator
         {
             //KeyValuePair<string, string> TnDn = new KeyValuePair<string, string>(TN, DN);
             //Добавим endpoint в словарь всех endpoint, хотя бы TN.
-            if (!dEndpoints.ContainsKey(TN))
+            if (!dAllEndpoints.ContainsKey(TN))
             {
-                dEndpoints.Add(TN, DN);
+                dAllEndpoints.Add(TN, DN);
             }
             //Додобавим туда же DN, если вдруг его нет для TN.
-            else if (dEndpoints.ContainsKey(TN) && dEndpoints[TN] != "" && DN != "")
+            /*else*/ if (dAllEndpoints.ContainsKey(TN) && dAllEndpoints[TN] != "" && DN != "")
             {
-                dEndpoints[TN] = DN;
+                dAllEndpoints[TN] = DN;
             }
             /* Добавим в словарь со статистикой информацию о endpoint
             */
@@ -112,10 +112,25 @@ namespace ADALogAnalisator
                  * сделать логику добавления информации о endpoint, если TN уже есть, т.е. продолжить заполнение статистических данных.
                  */
             }
+            if (TimeReg!= "")
+            {
+                if (!dUnregReg.ContainsKey(TN))
+                {
+                    KeyValuePair<string, string> test = new KeyValuePair<string, string>("", TimeReg);
+                    List<KeyValuePair<string, string>> lUnregAndReason = new List<KeyValuePair<string, string>>() { test };
+                    //lUnregAndReason.Add(lUnregAndReason);
+                    dUnregReg.Add(TN, lUnregAndReason);
+                }
+                else if (dUnregReg.ContainsKey(TN))
+                {
+                    /*TODO:
+                    сделать логику добрасывания времени + его сортировку*/
+                }
+            }
             
         }
 
-        private void FindUnregReason(string sLine)
+        private void FindUnregTimeAndReason(string sLine)
         {
             if (sLine.Contains("CEndpointManager::OnEndpointUnregistered"))
             {
@@ -123,6 +138,16 @@ namespace ADALogAnalisator
                 string UnregTime = sLine.Substring(sLine.IndexOf(":") - 2, 8);
                 string Reason = sLine.Substring(sLine.IndexOf("=") + 2, (sLine.LastIndexOf("(") - sLine.IndexOf("="))-3);
                 addEndpointToDictionaries(TN,"","",UnregTime,Reason);
+            }
+        }
+
+        private void FindRegTime(string sLine)
+        {
+            if (sLine.Contains("CEndpointManager::OnEndpointRegistrationSuccessful"))
+            {
+                string TN = sLine.Substring(sLine.IndexOf("TN ") + 3, (sLine.LastIndexOf("(") - sLine.IndexOf("TN ")) - 4);
+                string RegTime = sLine.Substring(sLine.IndexOf(":") - 2, 8);
+                addEndpointToDictionaries(TN, "", RegTime);
             }
         }
 
@@ -145,7 +170,8 @@ namespace ADALogAnalisator
                         */
                         lock (DictionarLock)
                         {
-                            FindUnregReason(line);
+                            FindUnregTimeAndReason(line);
+                            FindRegTime(line);
                         }
                     }
                     if (line.Contains(getDN()) || line.Contains(getTN()))
