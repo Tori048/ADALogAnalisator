@@ -95,14 +95,12 @@ namespace ADALogAnalisator
                 {
                     KeyValuePair<string, string> test = new KeyValuePair<string, string>(TimeUnreg + ";" + Reason, "");
                     List<KeyValuePair<string, string>> lUnregAndReason = new List<KeyValuePair<string, string>>() { test};
-                    //lUnregAndReason.Add(lUnregAndReason);
                     dUnregReg.Add(TN, lUnregAndReason);
                 }
                 else if (TimeReg != "")
                 {
                     KeyValuePair<string, string> test = new KeyValuePair<string, string>("", TimeReg);
                     List<KeyValuePair<string, string>> lReg = new List<KeyValuePair<string, string>>() { test };
-                    //lUnregAndReason.Add(lUnregAndReason);
                     dUnregReg.Add(TN, lReg);
                 }
             }
@@ -118,7 +116,6 @@ namespace ADALogAnalisator
                 {
                     KeyValuePair<string, string> test = new KeyValuePair<string, string>("", TimeReg);
                     List<KeyValuePair<string, string>> lUnregAndReason = new List<KeyValuePair<string, string>>() { test };
-                    //lUnregAndReason.Add(lUnregAndReason);
                     dUnregReg.Add(TN, lUnregAndReason);
                 }
                 else if (dUnregReg.ContainsKey(TN))
@@ -130,14 +127,69 @@ namespace ADALogAnalisator
             
         }
 
+        private int getMonth(string sMonth)
+        {
+            int iMonth = 0;
+            switch(sMonth)
+            {
+                case "Jan":
+                    iMonth = 1;
+                    break;
+                case "Feb":
+                    iMonth = 2;
+                    break;
+                case "Mar":
+                    iMonth = 3;
+                    break;
+                case "Apr":
+                    iMonth = 4;
+                    break;
+                case "May":
+                    iMonth = 5;
+                    break;
+                case "Jun":
+                    iMonth = 6;
+                    break;
+                case "Jul":
+                    iMonth = 7;
+                    break;
+                case "Aug":
+                    iMonth = 8;
+                    break;
+                case "Sep":
+                    iMonth = 9;
+                    break;
+                case "Oct":
+                    iMonth = 10;
+                    break;
+                case "Nov":
+                    iMonth = 11;
+                    break;
+                case "Dec":
+                    iMonth = 12;
+                    break;
+            }
+            return iMonth;
+        }
+
         private void FindUnregTimeAndReason(string sLine)
         {
             if (sLine.Contains("CEndpointManager::OnEndpointUnregistered"))
             {
                 string TN = sLine.Substring(sLine.IndexOf("TN ")+3, (sLine.LastIndexOf(",") - sLine.IndexOf("TN "))-3);
+                string UnregMonth = sLine.Substring(0, sLine.IndexOf(" "));
+                int iMonth = getMonth(UnregMonth);
+                string UnregDay = sLine.Substring(sLine.IndexOf(" ") + 1, 2);
+                int iDay = Int32.Parse(UnregDay);
                 string UnregTime = sLine.Substring(sLine.IndexOf(":") - 2, 8);
+                int iHour = Int32.Parse(UnregTime.Substring(UnregTime.IndexOf(":") - 2, 2));
+                int iMin = Int32.Parse(UnregTime.Substring(UnregTime.IndexOf(":") + 1, 2));
+                int iSec = Int32.Parse(UnregTime.Substring(UnregTime.LastIndexOf(":") + 1, 2));
                 string Reason = sLine.Substring(sLine.IndexOf("=") + 2, (sLine.LastIndexOf("(") - sLine.IndexOf("="))-3);
-                addEndpointToDictionaries(TN,"","",UnregTime,Reason);
+                DateTime UnregisterTime = new DateTime(1984, iMonth, iDay, iHour, iMin, iSec);
+                /* ToDO:
+                 * Прикрути использование DateTime к addEndpointToDictionaries, а то как в деревне*/
+               // addEndpointToDictionaries(TN,"","",UnregTime,Reason);
             }
         }
 
@@ -146,7 +198,8 @@ namespace ADALogAnalisator
             if (sLine.Contains("CEndpointManager::OnEndpointRegistrationSuccessful"))
             {
                 string TN = sLine.Substring(sLine.IndexOf("TN ") + 3, (sLine.LastIndexOf("(") - sLine.IndexOf("TN ")) - 4);
-                string RegTime = sLine.Substring(sLine.IndexOf(":") - 2, 8);
+                string RegDay = sLine.Substring(sLine.IndexOf(" ") - 3, sLine.IndexOf(":") - 3);
+                string RegTime = RegDay + "/" + sLine.Substring(sLine.IndexOf(":") - 2, 8);
                 addEndpointToDictionaries(TN, "", RegTime);
             }
         }
@@ -164,7 +217,7 @@ namespace ADALogAnalisator
                     1. Если находится нужный DN/TN - запоминается время и название сервера.
                     2. Если телефон разрегистрировался - запоминается причина разрегистрации.
                     */
-                    if (SelectUnregReason)
+                if (SelectUnregReason)
                     {/*
                         если line содержит что-то, что будет указывать на TN или DN, то тогда надо закинуть их в словарь с endpints.
                         */
